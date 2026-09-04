@@ -1,0 +1,35 @@
+name: Import dashboard HTML
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-dashboard.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original dashboard HTML
+        run: |
+          set -euo pipefail
+          curl -fsSL -o index.html "https://litter.catbox.moe/1txoj9.txt"
+          test -s index.html
+          grep -q "Bank Merger Summary Analysis" index.html
+          wc -c index.html
+      - name: Commit index.html if needed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "index.html already current"
+            exit 0
+          fi
+          git commit -m "Add dashboard as index.html"
+          git push
